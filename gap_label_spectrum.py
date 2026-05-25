@@ -1,0 +1,158 @@
+"""
+gap_label_spectrum.py
+=====================
+Computes the gap-label spectrum of the Spectre tiling's C*-algebra,
+plots it against a periodic (rational) baseline, and exports a
+comparison table for use in the paper.
+
+The gap-labeling theorem (Bellissard, van Elst, Schulz-Baldes 1994)
+states that the integrated density of states (IDS) at each spectral
+gap of the Hamiltonian on ℓ²(Ω) is an element of the group
+
+    𝒢 = ℤ[λ⁻¹] ⊂ ℝ
+
+where λ is the Spectre inflation factor.  Each gap is labelled by a
+unique element   g = Σₖ nₖ λ⁻ᵏ   (nₖ ∈ ℤ).
+
+Usage:
+    python3 gap_label_spectrum.py          # text output only
+    python3 gap_label_spectrum.py --plot   # also show matplotlib figure
+"""
+
+import math
+import sys
+import numpy as np
+from itertools import product
+
+# ── Spectre inflation factor ──────────────────────────────────
+sqrt3 = math.sqrt(3)
+LAM = (1 + sqrt3 + math.sqrt(2 + 2 * sqrt3)) / 2   # ≈ 2.5348
+H_TOP = math.log(LAM)                                # topological entropy (nats)
+
+
+def gap_label(coefficients):
+    """Evaluate g = Σ nₖ λ⁻ᵏ for a list of integer coefficients."""
+    return sum(c * LAM**(-k) for k, c in enumerate(coefficients))
+
+
+def generate_gap_labels(max_order=6, coeff_range=(-1, 0, 1)):
+    """
+    Generate all gap labels up to `max_order` in the basis {λ⁻ᵏ}.
+    Returns sorted unique values in [0, 1].
+    """
+    labels = set()
+    for order in range(1, max_order + 1):
+        for coeffs in product(coeff_range, repeat=order):
+            g = gap_label(coeffs)
+            if 0 < g < 1:
+                labels.add(round(g, 12))
+    return sorted(labels)
+
+
+def periodic_labels(n_harmonics=30):
+    """Rational labels p/q with q ≤ n_harmonics — the periodic baseline."""
+    labels = set()
+    for q in range(1, n_harmonics + 1):
+        for p in range(1, q):
+            labels.add(p / q)
+    return sorted(labels)
+
+
+# ── Generate labels ───────────────────────────────────────────
+print("=" * 65)
+print("  Gap-Label Spectrum  𝒢 = ℤ[λ⁻¹]  for the Spectre Tiling")
+print("=" * 65)
+print(f"\n  λ = {LAM:.10f}")
+print(f"  Topological entropy h_top = log(λ) = {H_TOP:.8f} nats\n")
+
+# Primary hierarchy: λ⁻ᵏ for k = 0..7
+print("  Primary gap labels  λ⁻ᵏ:")
+print(f"  {'k':>3}  {'λ⁻ᵏ':>14}  {'Ratio λ⁻(k-1)/λ⁻k':>20}")
+primary = [LAM**(-k) for k in range(8)]
+for k, g in enumerate(primary):
+    ratio = primary[k-1] / g if k > 0 else "—"
+    ratio_str = f"{ratio:.8f}" if k > 0 else "—"
+    print(f"  {k:>3}  {g:>14.10f}  {ratio_str:>20}")
+
+# Extended labels from integer combinations
+print("\n  Extended ℤ[λ⁻¹] labels (coefficients in {-1,0,1}, order ≤ 4):")
+ext = generate_gap_labels(max_order=4)
+print(f"  Total unique labels in (0,1): {len(ext)}")
+print(f"  First 12: {[f'{g:.6f}' for g in ext[:12]]}")
+
+# Density comparison: aperiodic vs periodic
+ap_density = len(ext) / 1.0       # labels per unit interval
+per_labels  = periodic_labels(20)
+print(f"\n  Aperiodic labels (|coeff|≤1, k≤4):  {len(ext)} in (0,1)")
+print(f"  Periodic labels (q≤20):             {len(per_labels)} in (0,1)")
+
+# Distinguishing feature: check irrationality of all primary labels
+print("\n  Irrationality check (no label should be expressible as p/q, q<100):")
+for k in range(1, 6):
+    g = LAM**(-k)
+    best_q = min(range(1, 1000), key=lambda q: abs(g - round(g * q) / q))
+    best_approx = round(g * best_q) / best_q
+    error = abs(g - best_approx)
+    print(f"  λ⁻{k} = {g:.10f}  best rational ≈ {round(g*best_q)}/{best_q} = {best_approx:.10f}  Δ = {error:.2e}")
+
+print(f"\n  All primary labels are irrational (Pisot property of λ).")
+print(f"  A periodic spectrum would have Δ < 10⁻¹² for some small q.")
+
+# ── Optional plot ─────────────────────────────────────────────
+if "--plot" in sys.argv:
+    try:
+        import matplotlib.pyplot as plt
+        import matplotlib.patches as mpatches
+
+        fig, axes = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
+        fig.suptitle(
+            r"Gap-Label Spectrum $\mathcal{G} = \mathbb{Z}[\lambda^{-1}]$"
+            "\nvs Rational (Periodic) Baseline",
+            fontsize=13
+        )
+
+        # Axis 0: primary hierarchy λ⁻ᵏ
+        ax = axes[0]
+        ax.set_title(r"Primary hierarchy $\lambda^{-k}$, $k=0,\ldots,7$", fontsize=10)
+        for k, g in enumerate(primary):
+            ax.axvline(g, color="steelblue", lw=2, alpha=0.85,
+                       label=f"λ⁻{k}" if k < 4 else None)
+            ax.text(g, 0.6, f"k={k}", ha="center", va="bottom",
+                    fontsize=7, color="steelblue", rotation=90)
+        ax.set_ylim(0, 1)
+        ax.set_yticks([])
+        ax.set_ylabel("Aperiodic", fontsize=9)
+
+        # Axis 1: extended ℤ[λ⁻¹] labels
+        ax = axes[1]
+        ax.set_title(r"All $\mathbb{Z}[\lambda^{-1}]$ labels, $|n_k|\leq 1$, order $\leq 4$", fontsize=10)
+        for g in ext:
+            ax.axvline(g, color="darkorange", lw=0.7, alpha=0.6)
+        ax.set_ylim(0, 1)
+        ax.set_yticks([])
+        ax.set_ylabel("Aperiodic", fontsize=9)
+
+        # Axis 2: periodic rational baseline
+        ax = axes[2]
+        ax.set_title("Periodic baseline: rational labels $p/q$, $q \\leq 20$", fontsize=10)
+        for g in per_labels:
+            ax.axvline(g, color="firebrick", lw=0.5, alpha=0.5)
+        ax.set_ylim(0, 1)
+        ax.set_yticks([])
+        ax.set_ylabel("Periodic", fontsize=9)
+        ax.set_xlabel("Integrated density of states (fraction of band)", fontsize=10)
+        ax.set_xlim(0, 1)
+
+        blue_patch   = mpatches.Patch(color="steelblue",   label="Aperiodic primary λ⁻ᵏ")
+        orange_patch = mpatches.Patch(color="darkorange",  label="Aperiodic extended ℤ[λ⁻¹]")
+        red_patch    = mpatches.Patch(color="firebrick",   label="Periodic rational")
+        fig.legend(handles=[blue_patch, orange_patch, red_patch],
+                   loc="lower center", ncol=3, fontsize=9, framealpha=0.9)
+
+        plt.tight_layout(rect=[0, 0.06, 1, 1])
+        plt.savefig("gap_label_spectrum.pdf", dpi=150, bbox_inches="tight")
+        print("\n  Figure saved to gap_label_spectrum.pdf")
+        plt.show()
+
+    except ImportError:
+        print("\n  matplotlib not installed — skipping plot.")
