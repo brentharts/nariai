@@ -41,10 +41,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # ── Load paper constants ──────────────────────────────────────────────────────
-sqrt3 = math.sqrt(3)
-LAM        = (1 + sqrt3 + math.sqrt(2 + 2*sqrt3)) / 2
-LAM2       = LAM**2
-H_TOP      = math.log(LAM)
+# REBUILT on nariai_constants.  LAM is the LINEAR inflation factor and LAM2
+# the AREA factor; the relation LAM2 == LAM**2 holds for the corrected pair
+# as it did for the retracted one, so the rest of this file is unaffected.
+# H_TOP is now the growth rate log(lambda_A) and is NOT an entropy.
+from nariai_constants import (LINEAR as LAM, AREA as LAM2,
+                              GROWTH_RATE as H_TOP)
 DELTA_CHI  = 1
 PI_CIRC    = DELTA_CHI / LAM2
 G_E        = -504

@@ -39,28 +39,55 @@ linear inflation  lambda_L = (sqrt6+sqrt10)/2  = 2.8058837015   (x^4 - 8x^2 + 1)
 The two numbers differ by 0.271, so **every λ-dependent quantity in the
 superseded files is wrong**, not merely imprecise.
 
-### This is not contained — five live scripts still use the retracted value
+### Rebuilt — and there were eight, not five
 
-The retraction is documented inside `corrected_constants.py`, but nothing
-stops the other scripts from running and printing confident numbers derived
-from the old λ. As of this writing:
+Eight scripts computed with the retracted λ. All now import from
+`nariai_constants.py`, the single importable source of truth, and
+`consistency_test.py` fails if any of them drifts back.
 
-| script | how the retracted λ enters | status |
+| script | λ meant | rebuilt to |
 |---|---|---|
-| `gap_label_spectrum.py` | hard-coded `LAM = (1+sqrt3+sqrt(2+2 sqrt3))/2` | **needs rebuild** |
-| `parity_violation_derivation.py` | same hard-coded line | **needs rebuild** |
-| `sgwb_polarization.py` | same hard-coded line | **needs rebuild** |
-| `dimensional_flow_sle.py` | `from sle_constants import LAM, LAM2, H_TOP, ...` | **needs rebuild** |
-| `sle_phase_transition.py` | same import | **needs rebuild** |
+| `gap_label_spectrum.py` | gap-label base | `GAP_BASE` (= λ_A) |
+| `brst_cohomology.py` | gap-label base | `GAP_BASE` (= λ_A) |
+| `parity_violation_derivation.py` | linear, with `LAM2` the area | `LINEAR` / `AREA` |
+| `sgwb_polarization.py` | linear, with `LAM2` the area | `LINEAR` / `AREA` |
+| `retrocausal_capacity_verification.py` | linear, with `LAM2` the area | `LINEAR` / `AREA` |
+| `dimensional_flow_sle.py` | via `sle_constants` | `LINEAR` / `AREA` / `GROWTH_RATE` |
+| `sle_phase_transition.py` | via `sle_constants` | `LINEAR` / `AREA` / `GROWTH_RATE` |
+| `spectral_diagnostic.py` | Part 1 rebuilt entirely | see below |
 
-All five run without error and produce plausible-looking output. There is
-currently no way for a reader to tell them apart from the authoritative
-results, which is the single most important thing to fix in this repository.
+Not a blanket substitution. `λ_A = λ_L²`, so a script using `LAM` for the
+linear factor and `LAM2 = LAM**2` for the area stays internally consistent
+when both move together. But the gap-label module is `Z[1/λ_A]`, so gap
+labels are powers of the **area** factor — a script feeding the linear
+factor into `sum(n_k λ**-k)` is wrong even with the retraction fixed.
 
-### What changes, concretely
+**The three extra offenders were found by the test, not by inspection.** An
+earlier draft of this README named five, from a grep for `2.5348` and for
+`sle_constants` imports. `brst_cohomology.py`,
+`retrocausal_capacity_verification.py` and `spectral_diagnostic.py` carried
+the retracted value as an *un-evaluated expression* and never wrote the
+digits anywhere, so that grep missed all three — and two of them were listed
+here as authoritative. `consistency_test.py` searches for the form as well
+as the decimal, which is the only reason they surfaced.
+
+`spectral_diagnostic.py` was the worst case. Its Part 1, titled "Exact
+Spectre invariants (certain)", derived a fourth-order gap-label recurrence,
+verified it against the retracted λ, and reported the manuscript's appendix
+recurrence as a bug by comparison. Both sides of that comparison are
+obsolete: λ_A's minimal polynomial is quadratic, so the recurrence is
+`g_(k+2) = 8 g_(k+1) - g_k`, second order. That block is replaced, not
+annotated — a diagnostic that certifies a recurrence for the wrong number is
+worse than one that certifies nothing.
+
+`sle_constants.py` now **raises on import**. It is kept as a file so the
+history stays legible, but a module whose only remaining purpose is to be
+superseded should not quietly hand out a number.
+
+### What changed, concretely
 
 The flagship observational prediction is affected. `sgwb_polarization.py`
-computes the SGWB circular polarisation as `Pi_circ = Delta_chi / lambda^2`
+computed the SGWB circular polarisation as `Pi_circ = Delta_chi / lambda^2`
 with `Delta_chi = 1`, giving **15.56%**. With the corrected area inflation
 the same formula gives
 
@@ -72,7 +99,9 @@ that is **12.70%**, not 15.56%. The corrected value is not just a different
 decimal: it is the conjugate unit of Z[sqrt 15], and it is exactly the
 leading gap label `lambda_A^-1` in the authoritative summary table. Whether
 the underlying identification is right is a separate question — but the
-arithmetic downstream of it should be quoted at 12.70%.
+arithmetic downstream of it is now quoted at 12.70% throughout, and
+`nariai_constants` checks that `PI_CIRC` equals the leading gap label rather
+than assuming it.
 
 Three other quantities are retracted outright in `corrected_constants.py`
 and should not be cited from this repository at all:
@@ -117,30 +146,35 @@ no source arrive at the same `4 + sqrt(15)`.
 
 | file | purpose |
 |---|---|
-| `corrected_constants.py` | **Start here.** Authoritative constants, with every retracted quantity named and its reason given. |
+| `nariai_constants.py` | **Start here.** The single importable source of truth. Silent, derives everything from the substitution matrix, `--selftest`. |
+| `consistency_test.py` | Checks the repository against itself: source, imports, and output. Run it before pushing. |
+| `corrected_constants.py` | The retraction report: what was wrong, what replaced it, and why. |
 | `spectre.py` | The Smith–Myers–Kaplan–Goodman-Strauss metatile substitution; the geometry everything else rests on. |
 | `brst_cohomology.py` | Anderson–Putnam chain complex for the Spectre; BRST/boundary cohomology `H*(Omega)`. |
 | `spectre_gaplabels_and_dimension.py` | Gap-label module from the Perron eigenvector, and the spectral dimension. |
 | `spectre_spectral_dimension.py` | Spectral dimension of the tile-adjacency Laplacian on a genuine Spectre approximant, with finite-size calibration. |
 | `spectral_diagnostic.py` | Measures what is measurable rather than assuming it; validated against Sierpinski (`d_s = 1.365` recovered). |
 
-### Built on the retracted constants (do not cite)
+### Rebuilt on the corrected constants
 
 | file | purpose |
 |---|---|
-| `verify_constants.py` | Superseded by `corrected_constants.py`. |
-| `sle_constants.py` | Superseded; still exports `LAM = 2.5348`, `H_TOP = 0.930`. |
 | `gap_label_spectrum.py` | Gap-label spectrum vs a periodic baseline. |
 | `sle_phase_transition.py` | Hat → Spectre transition as SLE_kappa; `kappa*` from the Eisenstein coupling `gE = -504`. |
 | `dimensional_flow_sle.py` | Dimensional flow `d_s: 2 -> 4` via heat kernel and Pisot recursion. |
 | `parity_violation_derivation.py` | Tiling-induced Chern–Simons coupling and the parity-odd VEV. |
-| `sgwb_polarization.py` | SGWB circular polarisation prediction. |
+| `sgwb_polarization.py` | SGWB circular polarisation prediction, now 12.70%. |
 | `retrocausal_capacity_verification.py` | Ji–Lloyd–Wilde retrocausal capacity dictionary. |
 
-Several of these are interesting independently of the constant they use —
-the SLE and cohomology structure does not depend on λ's numerical value,
-only the final numbers do. They are listed here because their *output* is
-currently untrustworthy, not because the ideas are.
+The structure of these was never in question — the SLE and cohomology
+arguments do not depend on λ's numerical value, only the final numbers did.
+
+### Retracted, kept for the record
+
+| file | status |
+|---|---|
+| `sle_constants.py` | Raises on import. Superseded by `nariai_constants`. |
+| `verify_constants.py` | Superseded by `corrected_constants.py`. Historical. |
 
 ### Observational analyses (`ligo*.py`, `ligo_pulsar*.py`)
 
@@ -161,9 +195,14 @@ what superseded what. Treat them as a lab notebook.
 ## Running things
 
 ```sh
-python3 corrected_constants.py        # authoritative constants, asserts throughout
-python3 brst_cohomology.py            # AP complex and cohomology
-python3 spectre_spectral_dimension.py # spectral dimension measurement
+python3 nariai_constants.py             # the authoritative table
+python3 nariai_constants.py --selftest  # verify every derivation
+python3 consistency_test.py             # does the repo agree with itself?
+python3 consistency_test.py --quick     # source and imports only, no runs
+
+python3 corrected_constants.py          # the retraction report
+python3 brst_cohomology.py              # AP complex and cohomology
+python3 spectre_spectral_dimension.py   # spectral dimension measurement
 ```
 
 Requirements: Python ≥ 3.10, `numpy`, `scipy`, `sympy`, `matplotlib`.
@@ -178,8 +217,10 @@ pip install gwpy astropy scikit-learn
 
 | group | files | runs clean |
 |---|---|---|
-| core algebra | 6 | 6 |
-| built on retracted constants | 8 | 8 (output untrustworthy) |
+| authority and test | 3 | 3 |
+| rebuilt on the corrected constants | 8 | 8 |
+| other core algebra | 3 | 3 |
+| retracted, kept for the record | 2 | 1 (`sle_constants` raises by design) |
 | `ligo*` / `ligo_pulsar*` | 36 | 2 without `gwpy` |
 
 The 34 that fail do so only on the missing `gwpy` import, not on broken
@@ -190,23 +231,19 @@ so their status beyond "imports resolve" is unverified.
 
 ## Known problems, in the order worth fixing
 
-1. **Rebuild the five live scripts on `corrected_constants`.** Replace the
-   hard-coded `LAM` lines and the `sle_constants` imports with the verified
-   values, and re-derive `kappa*`, `Pi_circ`, and the dimensional flow.
-   Until then the repository publishes two mutually inconsistent sets of
-   numbers with nothing marking which is which.
-2. **Delete or quarantine `sle_constants.py`.** It is a live import path to
-   a retracted value. A module that exists only to be superseded should
-   raise on import, not return a number.
-3. **Make the retraction machine-checkable.** `corrected_constants.py`
-   asserts its own values; nothing asserts that the *other* files agree with
-   it. A cross-file consistency test that fails when any script computes
-   with `2.5348` would have caught all five.
-4. **Give the `ligo*` series an index.** Thirty-six files with no record of
+1. **Re-examine what the rebuilt scripts now conclude.** Eight files changed
+   their numbers; their *arguments* have not been re-read in light of that.
+   `dimensional_flow_sle.py` in particular fits a log-periodic oscillation
+   whose period is set by `log λ²`, and that period has moved.
+2. **Give the `ligo*` series an index.** Thirty-six files with no record of
    which supersede which is not recoverable by a reader, and barely by the
    author.
-5. **Re-run the observational analyses.** Their last verified state is
-   unknown.
+3. **Re-run the observational analyses.** Their last verified state is
+   unknown; they were not run against live GWOSC data in preparing this file.
+4. **Extend `consistency_test.py` to the `ligo*` series.** It currently
+   checks the algebra only, because that is where the retraction was. If any
+   of the observational scripts hard-code a tiling constant, the same drift
+   can happen there and nothing would catch it.
 
 ## Papers
 

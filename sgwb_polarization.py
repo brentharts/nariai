@@ -35,9 +35,11 @@ import sys
 import numpy as np
 
 # ── Spectre constants ─────────────────────────────────────────
-sqrt3 = math.sqrt(3)
-LAM   = (1 + sqrt3 + math.sqrt(2 + 2 * sqrt3)) / 2   # ≈ 2.5348
-LAM2  = LAM**2                                          # ≈ 6.425
+# REBUILT on nariai_constants.  This file uses LAM as the LINEAR inflation
+# factor and LAM2 = LAM**2 as the AREA factor, and that relation still holds
+# for the corrected pair (lambda_A = lambda_L^2), so correcting both together
+# leaves everything downstream internally consistent.
+from nariai_constants import LINEAR as LAM, AREA as LAM2
 
 V_HAT     = 13
 V_SPECTRE = 14

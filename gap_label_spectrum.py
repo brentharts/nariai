@@ -25,9 +25,21 @@ import numpy as np
 from itertools import product
 
 # ── Spectre inflation factor ──────────────────────────────────
-sqrt3 = math.sqrt(3)
-LAM = (1 + sqrt3 + math.sqrt(2 + 2 * sqrt3)) / 2   # ≈ 2.5348
-H_TOP = math.log(LAM)                                # topological entropy (nats)
+# REBUILT on nariai_constants.  Two corrections, not one:
+#
+#   (a) the inflation factor was the retracted one;
+#   (b) the base of the gap-label module is the AREA factor lambda_A, not
+#       the linear one.  Gap labels lie in Z[1/lambda_A] (Bellissard-van
+#       Elst-Schulz-Baldes), so sum(n_k lam**-k) must be summed over powers
+#       of 4+sqrt(15).  Substituting the linear factor here would still be
+#       wrong even with the retraction fixed, which is why this file is not
+#       a one-line change.
+from nariai_constants import GAP_BASE as LAM, GROWTH_RATE
+
+# log(lambda_A) is the growth rate of the tile count, NOT a topological
+# entropy: primitive substitution tilings are uniquely ergodic and their
+# translation action has zero topological entropy.
+H_TOP = GROWTH_RATE
 
 
 def gap_label(coefficients):
@@ -63,7 +75,7 @@ print("=" * 65)
 print("  Gap-Label Spectrum  𝒢 = ℤ[λ⁻¹]  for the Spectre Tiling")
 print("=" * 65)
 print(f"\n  λ = {LAM:.10f}")
-print(f"  Topological entropy h_top = log(λ) = {H_TOP:.8f} nats\n")
+print(f"  Growth rate log(λ_A) = {H_TOP:.8f} nats  (not an entropy)\n")
 
 # Primary hierarchy: λ⁻ᵏ for k = 0..7
 print("  Primary gap labels  λ⁻ᵏ:")

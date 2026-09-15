@@ -20,9 +20,14 @@ Usage:  python3 sle_phase_transition.py [--save] [--latex]
 """
 
 import numpy as np, math, sys
-from sle_constants import (LAM, LAM2, H_TOP, DELTA_CHI, PI_CIRC,
-                            kappa_star, D_f_star, c_star, h_boundary,
-                            gE_ratio, G_E, E4_coeff)
+# REBUILT: the module this used to import carried the retracted
+# inflation factor and the 'topological entropy' derived from it.  The
+# Eisenstein block (kappa*, c*, D_f*) never depended on lambda and is
+# unchanged; only LAM, LAM2 and H_TOP move.  H_TOP is now the growth
+# rate log(lambda_A), not an entropy.
+from nariai_constants import (LAM, LAM2, GROWTH_RATE as H_TOP, DELTA_CHI, PI_CIRC,
+                              kappa_star, D_f_star, c_star, h_boundary,
+                              gE_ratio, G_E, E4_coeff)
 
 SEP = "─"*68
 def section(t): print(f"\n{SEP}\n  {t}\n{SEP}")

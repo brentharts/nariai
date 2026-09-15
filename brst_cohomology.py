@@ -179,8 +179,10 @@ print(f"  max |∂₁∂₂|ᵢⱼ = {np.max(np.abs(Q2))}  ✓  Q² = 0")
 section("Connection to Gap-Label Group  𝒢 = ℤ[λ⁻¹]")
 
 import math
-sqrt3 = math.sqrt(3)
-LAM = (1 + sqrt3 + math.sqrt(2 + 2 * sqrt3)) / 2
+# REBUILT on nariai_constants.  LAM here is used as the base of the gap
+# labels (LAM**-k), and gap labels lie in Z[1/lambda_A], so the base is the
+# AREA inflation factor.
+from nariai_constants import GAP_BASE as LAM
 
 print(f"""
   The rank of H¹(Ω) determines the number of independent gap labels.

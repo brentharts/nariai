@@ -104,37 +104,44 @@ def dominant_log_period(t_grid, K, d_s_smooth, mask):
 # ======================================================================
 section("PART 1.  Exact Spectre invariants (certain)")
 # ======================================================================
-sqrt3 = math.sqrt(3)
-LAM = (1 + sqrt3 + math.sqrt(2 + 2 * sqrt3)) / 2
+# REBUILT on nariai_constants.
+#
+# This section used to be titled "exact invariants (certain)" and was built
+# entirely on the retracted inflation factor, taken as the largest real root
+# of 4x^4 - 8x^3 - 4x^2 - 4x + 1.  It then derived a fourth-order gap-label
+# recurrence, verified it against that lambda, and reported the manuscript's
+# appendix recurrence as a bug by comparison.
+#
+# Both sides of that comparison are obsolete.  The Spectre inflation factor
+# is the Perron eigenvalue of the metatile substitution matrix, and its
+# minimal polynomial is QUADRATIC, so the gap-label recurrence is second
+# order, not fourth:
+#
+#     lambda_A^2 - 8 lambda_A + 1 = 0   =>   g_(k+2) = 8 g_(k+1) - g_k
+#
+# A diagnostic that certifies a recurrence for the wrong number is worse
+# than one that certifies nothing, so the old block is replaced rather than
+# annotated.
+from nariai_constants import (AREA, LINEAR, CONJUGATE, GROWTH_RATE,
+                              PERRON, gap_recurrence_residual)
 
-# lambda as largest real root of 4x^4 - 8x^3 - 4x^2 - 4x + 1
-coeffs = [4, -8, -4, -4, 1]
-roots = np.roots(coeffs)
-real_roots = roots[np.abs(roots.imag) < 1e-9].real
-lam_poly = float(np.max(real_roots))
-conj_mods = sorted(abs(r) for r in roots if abs(r - lam_poly) > 1e-6)
+LAM = AREA          # gap labels are powers of the AREA factor
 
-print(f"  lambda (closed form) = {LAM:.10f}")
-print(f"  lambda (poly root)   = {lam_poly:.10f}   (agree: {abs(LAM-lam_poly):.1e})")
-print(f"  lambda^2             = {LAM**2:.10f}")
-print(f"  conjugate moduli     = {[f'{m:.4f}' for m in conj_mods]}")
-print(f"  Pisot?               = {all(m < 1 for m in conj_mods)}  (all conjugates inside unit disk)")
-print(f"  topological entropy  = log(lambda) = {math.log(LAM):.8f} nats")
+print(f"  area inflation   lambda_A = {AREA:.10f}   (4 + sqrt 15)")
+print(f"  linear inflation lambda_L = {LINEAR:.10f}   (sqrt6+sqrt10)/2")
+print(f"  Perron eigenvalue of M    = {PERRON:.10f}   (agree: {abs(PERRON-AREA):.1e})")
+print(f"  conjugate                 = {CONJUGATE:.10f}   (4 - sqrt 15 < 1)")
+print(f"  Pisot?                    = {abs(CONJUGATE) < 1}")
+print(f"  growth rate log(lambda_A) = {GROWTH_RATE:.8f} nats  (NOT an entropy:")
+print(f"                              primitive substitution tilings are")
+print(f"                              uniquely ergodic, h_top = 0)")
 
-sub("Gap-label recurrence: manuscript appendix is WRONG; correct one verified")
-print("  minimal poly /4:  lambda^4 = 2 lambda^3 + lambda^2 + lambda - 1/4")
-print("  => CORRECT:  lambda^-(k+4) = -4 lambda^-k + 8 lambda^-(k+1)")
-print("                              + 4 lambda^-(k+2) + 4 lambda^-(k+3)\n")
-maxres_correct = 0.0
-maxres_appendix = 0.0
-for k in range(7):
-    direct   = LAM**-(k+4)
-    correct  = -4*LAM**-k + 8*LAM**-(k+1) + 4*LAM**-(k+2) + 4*LAM**-(k+3)
-    appendix = 2*LAM**-(k+3) + LAM**-(k+2) + LAM**-(k+1) - 0.25*LAM**-k
-    maxres_correct  = max(maxres_correct, abs(direct - correct))
-    maxres_appendix = max(maxres_appendix, abs(direct - appendix))
-print(f"  max residual, CORRECT recurrence   = {maxres_correct:.2e}   (-> keep this)")
-print(f"  max residual, manuscript appendix  = {maxres_appendix:.2e}   (-> bug, must fix)")
+sub("Gap-label recurrence: second order, from the quadratic minimal polynomial")
+print("  lambda_A^2 = 8 lambda_A - 1  =>  g_(k+2) = 8 g_(k+1) - g_k")
+print(f"  max residual over k < 8    = {gap_recurrence_residual():.2e}   (exact)")
+print("  The manuscript appendix gave a fourth-order recurrence, and so did")
+print("  the previous version of this diagnostic; both were fitted to the")
+print("  retracted lambda and neither is needed.")
 
 
 # ======================================================================
