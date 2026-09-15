@@ -46,7 +46,7 @@ warnings.filterwarnings("ignore")
 # as it did for the retracted one, so the rest of this file is unaffected.
 # H_TOP is now the growth rate log(lambda_A) and is NOT an entropy.
 from nariai_constants import (LINEAR as LAM, AREA as LAM2,
-                              GROWTH_RATE as H_TOP)
+                              GROWTH_RATE as H_TOP, LOG_LINEAR)
 DELTA_CHI  = 1
 PI_CIRC    = DELTA_CHI / LAM2
 G_E        = -504
@@ -300,9 +300,9 @@ print(f"""
 # Numerical verification of the cyclicity property for the heat kernel loop
 subsection("B.1  Numerical Cyclicity Check: K(t) = lambda^{-d_s/2} K(t/lambda^2)")
 
-nu_RG = H_TOP / math.pi
+nu_RG = LOG_LINEAR / math.pi   # log of the LINEAR factor, as originally meant
 A_osc = (4.0 - 2.0) * kappa_star / (8 * LAM2)
-log_lam2 = 2 * H_TOP
+log_lam2 = math.log(LAM2)   # was 2*H_TOP; see nariai_constants.LOG_LINEAR
 
 def K_heat(t, d_UV=2.0, d_IR=4.0):
     """Heat kernel trace K(t) = t^{-d_s/2} (smooth + oscillatory)."""

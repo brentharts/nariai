@@ -25,7 +25,7 @@ import numpy as np, math, sys
 # Eisenstein block (kappa*, c*, D_f*) never depended on lambda and is
 # unchanged; only LAM, LAM2 and H_TOP move.  H_TOP is now the growth
 # rate log(lambda_A), not an entropy.
-from nariai_constants import (LAM, LAM2, GROWTH_RATE as H_TOP, DELTA_CHI, PI_CIRC,
+from nariai_constants import (LAM, LAM2, GROWTH_RATE as H_TOP, LOG_LINEAR, DELTA_CHI, PI_CIRC,
                               kappa_star, D_f_star, c_star, h_boundary,
                               gE_ratio, G_E, E4_coeff)
 
@@ -38,7 +38,12 @@ SAVE  = "--save" in sys.argv or "--plot" in sys.argv
 # ─── Derived quantities ───────────────────────────────────────────────────────
 kappa_UV = 2.0          # Hat phase (loop-erased RW / Brownian)
 kappa_IR = 8/3          # Spectre phase (self-avoiding walk)
-nu_RG    = H_TOP / math.pi   # crossover exponent from topological entropy
+# The original read `H_TOP / pi` with H_TOP = log of the LINEAR inflation
+# factor.  'Topological entropy' is retracted as a name -- primitive
+# substitution tilings have zero topological entropy -- so what the
+# formula actually uses is log(lambda_L), named as such.  Note this is
+# NOT GROWTH_RATE, which is twice as large.
+nu_RG    = LOG_LINEAR / math.pi
 
 print("="*68)
 print("  SLE Phase Transition:  Hat → Spectre Aperiodic Vacuum")
@@ -265,7 +270,7 @@ print(f"""
   │ Winding variance σ²_θ/log r         │ {sigma2_wind:.8f}         │ new          │
   │ RG crossover exponent ν_RG          │ {nu_RG:.8f}         │ new          │
   │ Inflation factor λ                  │ {LAM:.8f}         │ Eq. (1)      │
-  │ Topological entropy h_top           │ {H_TOP:.8f} nats    │ §IV.B        │
+  │ Growth rate log(λ_A) (not entropy)  │ {H_TOP:.8f} nats    │ §IV.B        │
   │ Chirality cost Δχ                   │ {DELTA_CHI}                      │ §V.A         │
   │ Π_circ = Δχ/λ²                     │ {PI_CIRC:.8f}         │ Eq. (12)     │
   └─────────────────────────────────────┴────────────────────────┴──────────────┘

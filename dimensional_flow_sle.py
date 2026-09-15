@@ -32,7 +32,7 @@ import numpy as np, math, sys
 # Eisenstein block (kappa*, c*, D_f*) never depended on lambda and is
 # unchanged; only LAM, LAM2 and H_TOP move.  H_TOP is now the growth
 # rate log(lambda_A), not an entropy.
-from nariai_constants import (LAM, LAM2, GROWTH_RATE as H_TOP, DELTA_CHI, PI_CIRC,
+from nariai_constants import (LAM, LAM2, GROWTH_RATE as H_TOP, LOG_LINEAR, DELTA_CHI, PI_CIRC,
                               kappa_star, D_f_star, G_E, E4_coeff, gE_ratio)
 
 LATEX = "--latex" in sys.argv
@@ -41,11 +41,14 @@ SAVE  = "--save"  in sys.argv or "--plot" in sys.argv
 SEP = "─"*68
 def section(t): print(f"\n{SEP}\n  {t}\n{SEP}")
 
-nu_RG   = H_TOP / math.pi          # crossover exponent
+nu_RG   = LOG_LINEAR / math.pi     # crossover exponent; see below
 kappa_UV = 2.0
 kappa_IR = 8/3
 Df_star  = D_f_star
-log_lam2 = 2 * H_TOP               # log(λ²) = period of Pisot oscillation
+# log(LAM2) directly.  This used to read `2 * H_TOP`, which was an
+# identity only while H_TOP was log of the LINEAR factor.  Taking the
+# log of LAM2 itself leaves no identity to break.
+log_lam2 = math.log(LAM2)
 
 print("="*68)
 print("  Dynamical Dimensional Flow on the Aperiodic Tiling Space")
@@ -68,9 +71,9 @@ print(f"""
   Parameters (all from λ and κ*, no free parameters):
       d_UV = 2.0   (Hat phase, flat 2D, UV)
       d_IR = 4.0   (Spectre phase, 4D GR, IR)
-      ν    = h_top/π = {nu_RG:.8f}   (crossover exponent)
+      ν    = log(λ_L)/π = {nu_RG:.8f}   (crossover exponent)
       A_osc = (d_IR−d_UV)·κ*/(8·λ²) = {(4-2)*kappa_star/(8*LAM2):.8f}
-      log(λ²) = 2h_top = {log_lam2:.8f}  (oscillation period)
+      log(λ²) = log(λ_A) = {log_lam2:.8f}  (oscillation period)
 """)
 
 A_osc = (4.0 - 2.0) * kappa_star / (8 * LAM2)

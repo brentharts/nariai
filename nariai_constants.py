@@ -78,6 +78,18 @@ CONJUGATE = 4 - math.sqrt(15)     # = 1/AREA, the Pisot conjugate
 # zero topological entropy. See RETRACTED['h_top'].
 GROWTH_RATE = math.log(AREA)
 
+# log of the LINEAR factor.  This is a trap worth naming: the old scripts
+# defined `H_TOP = log(LAM)` with LAM the linear factor, and then relied on
+# identities such as `log(lambda^2) = 2 * H_TOP` and `nu = H_TOP / pi`.
+# Rebuilding them by mapping H_TOP to GROWTH_RATE = log(AREA) keeps the word
+# and breaks the arithmetic: log(AREA) is already 2*log(LINEAR), so
+# `2 * H_TOP` becomes log(AREA^2) and the oscillation period silently
+# doubles.  A script that wants "log of the inflation factor the old code
+# meant" wants this, and a script that wants the tile-count growth rate
+# wants GROWTH_RATE.  They differ by exactly a factor of two, which is why
+# substituting one for the other produces plausible output.
+LOG_LINEAR = math.log(LINEAR)
+
 # Aliases for scripts that use the older names. LAM is the LINEAR factor and
 # LAM2 the AREA factor, which is the convention parity_violation_derivation
 # and sgwb_polarization already use -- and LAM2 == LAM**2 still holds, so
@@ -189,6 +201,7 @@ def table():
         ("linear inflation lambda_L", "%.10f" % LINEAR, "(sqrt6+sqrt10)/2"),
         ("lambda_A conjugate", "%.10f" % CONJUGATE, "4 - sqrt(15) = 1/lambda_A"),
         ("growth rate log(lambda_A)", "%.8f nats" % GROWTH_RATE, "NOT entropy"),
+        ("log(lambda_L)", "%.8f" % LOG_LINEAR, "= GROWTH_RATE / 2"),
         ("Perron eigenvalue of M", "%.10f" % PERRON, "matches lambda_A"),
         ("gap-label base", "%.10f" % GAP_BASE, "Z[1/lambda_A] = Z[sqrt15]"),
         ("kappa*", "%.6f" % KAPPA_STAR, "lambda-independent"),
@@ -221,6 +234,12 @@ def selftest():
     check("AREA = LINEAR^2", abs(AREA - LINEAR ** 2) < 1e-12)
     check("CONJUGATE = 1/AREA", abs(CONJUGATE - 1 / AREA) < 1e-12)
     check("the unit is Pisot: |conjugate| < 1", abs(CONJUGATE) < 1)
+
+    print("the two logs are not interchangeable")
+    check("GROWTH_RATE is exactly twice LOG_LINEAR",
+          abs(GROWTH_RATE - 2 * LOG_LINEAR) < 1e-12)
+    check("log(AREA) is the oscillation period, not 2*log(AREA)",
+          abs(math.log(AREA) - GROWTH_RATE) < 1e-12)
 
     print("the gap-label module")
     check("the Pisot recurrence is exact", gap_recurrence_residual() < 1e-15)

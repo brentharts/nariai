@@ -84,6 +84,39 @@ worse than one that certifies nothing.
 history stays legible, but a module whose only remaining purpose is to be
 superseded should not quietly hand out a number.
 
+### The second round: a correct constant in a broken identity
+
+Fixing the constants was not enough, and the first rebuild was wrong in a
+way that passed every check then in place.
+
+Three scripts defined `H_TOP = log(LAM)` with `LAM` the **linear** factor,
+then relied on `log(λ²) = 2·H_TOP` and `ν = H_TOP/π`. Rebuilding them by
+mapping `H_TOP → GROWTH_RATE = log(λ_A)` kept the name and broke the
+arithmetic: `log(λ_A)` is *already* `2·log(λ_L)`, so `2·H_TOP` became
+`log(λ_A²)` and **the Pisot oscillation period silently doubled**, from
+2.0634 to 4.1269. The crossover exponent ν doubled with it, 0.3284 → 0.6568.
+
+Both numbers looked entirely plausible, and the source-, import- and
+output-level checks all passed, because every constant involved was correct.
+What was wrong was the relation between two of them.
+
+| quantity | first rebuild | corrected |
+|---|---|---|
+| Pisot period `log λ²` | 4.12687414 | **2.06343707** |
+| crossover exponent `ν` | 0.65681242 | **0.32840621** |
+
+`nariai_constants` now exports `LOG_LINEAR` alongside `GROWTH_RATE`, with
+the trap documented at the definition: they differ by exactly a factor of
+two, which is precisely why substituting one for the other produces output
+that looks right. `consistency_test.py` gained an **IDENTITY** stage that
+checks relations between constants rather than the constants themselves, and
+it has been verified against a deliberately reintroduced bug — restoring
+`log_lam2 = 2*H_TOP` makes it fail, as it must.
+
+`sle_phase_transition.py` was also still *printing* the retracted label
+"Topological entropy h_top" next to the corrected number. The value moved in
+the first rebuild; the name did not.
+
 ### What changed, concretely
 
 The flagship observational prediction is affected. `sgwb_polarization.py`
@@ -147,7 +180,7 @@ no source arrive at the same `4 + sqrt(15)`.
 | file | purpose |
 |---|---|
 | `nariai_constants.py` | **Start here.** The single importable source of truth. Silent, derives everything from the substitution matrix, `--selftest`. |
-| `consistency_test.py` | Checks the repository against itself: source, imports, and output. Run it before pushing. |
+| `consistency_test.py` | Checks the repository against itself: source, imports, output, and the identities between constants. Run it before pushing. |
 | `corrected_constants.py` | The retraction report: what was wrong, what replaced it, and why. |
 | `spectre.py` | The Smith–Myers–Kaplan–Goodman-Strauss metatile substitution; the geometry everything else rests on. |
 | `brst_cohomology.py` | Anderson–Putnam chain complex for the Spectre; BRST/boundary cohomology `H*(Omega)`. |
@@ -231,10 +264,11 @@ so their status beyond "imports resolve" is unverified.
 
 ## Known problems, in the order worth fixing
 
-1. **Re-examine what the rebuilt scripts now conclude.** Eight files changed
-   their numbers; their *arguments* have not been re-read in light of that.
-   `dimensional_flow_sle.py` in particular fits a log-periodic oscillation
-   whose period is set by `log λ²`, and that period has moved.
+1. **Re-examine the remaining rebuilt scripts' conclusions.** The
+   dimensional-flow and SLE files have now been re-read (see below);
+   `brst_cohomology.py`, `gap_label_spectrum.py` and
+   `retrocausal_capacity_verification.py` have had their constants corrected
+   but their downstream arguments have not been audited the same way.
 2. **Give the `ligo*` series an index.** Thirty-six files with no record of
    which supersede which is not recoverable by a reader, and barely by the
    author.

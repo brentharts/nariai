@@ -26,6 +26,17 @@ in three ways, because each catches something the others miss:
            corrected values and must not contain the retracted ones. Source
            scanning cannot see a number assembled at runtime; this can.
 
+  IDENTITY Relations BETWEEN the constants are checked, not just the
+           constants. This stage exists because the first rebuild passed
+           every other stage while being wrong. Three scripts defined
+           `H_TOP = log(lambda)` with lambda the LINEAR factor and then
+           relied on `log(lambda^2) = 2*H_TOP` and `nu = H_TOP/pi`. Mapping
+           H_TOP to GROWTH_RATE = log(AREA) kept the name, satisfied every
+           source and import check, and silently doubled the oscillation
+           period, because log(AREA) is already twice log(LINEAR). A stale
+           constant is easy to find; a broken identity between two correct
+           constants is not, and it prints just as confidently.
+
 `ALLOWED_TO_MENTION` is the exception list, and it is short on purpose. A
 module that documents a retraction has to be able to name it -- but every
 entry there is a file whose job is the retraction itself, and adding to that
@@ -187,6 +198,23 @@ def main():
               "0.1270166" in gap)
         check("and no longer calls the growth rate an entropy",
               "Topological entropy" not in gap)
+
+    if not quick:
+        print("\nIDENTITY: relations between the constants, not just their values")
+        import math as _m
+        check("GROWTH_RATE is twice LOG_LINEAR, so they cannot be swapped",
+              abs(C.GROWTH_RATE - 2 * C.LOG_LINEAR) < 1e-12)
+        flow = seen.get("dimensional_flow_sle.py", "")
+        check("the Pisot oscillation period is log(lambda_A)",
+              ("%.8f" % _m.log(C.AREA)) in flow)
+        check("and is NOT twice it",
+              ("%.8f" % (2 * _m.log(C.AREA))) not in flow)
+        check("the crossover exponent uses log(lambda_L)",
+              ("%.8f" % (C.LOG_LINEAR / _m.pi)) in flow)
+        for name in ("sle_phase_transition.py", "dimensional_flow_sle.py",
+                     "gap_label_spectrum.py"):
+            check("%s does not call a growth rate an entropy" % name,
+                  "Topological entropy" not in seen.get(name, ""))
 
     print("\nthe corrected values, for the record")
     print("    lambda_A  = %.10f   (4 + sqrt 15)" % C.AREA)
