@@ -61,6 +61,7 @@ ALLOWED_TO_MENTION = {
     "nariai_constants.py",      # defines RETRACTED and the search patterns
     "corrected_constants.py",   # states the retraction and its reasons
     "consistency_test.py",      # this file
+    "argument_audit.py",        # records the findings, including old values
     "sle_constants.py",         # quarantined; see below
     "verify_constants.py",      # superseded, kept as a historical record
     "spectre_spectral_dimension.py",   # quotes the wrong value to correct it
@@ -215,6 +216,25 @@ def main():
                      "gap_label_spectrum.py"):
             check("%s does not call a growth rate an entropy" % name,
                   "Topological entropy" not in seen.get(name, ""))
+
+    print("\nARGUMENT: the audited claims have not regressed")
+    rc_aud = subprocess.run([sys.executable, "argument_audit.py", "--selftest"],
+                            cwd=HERE, capture_output=True)
+    check("argument_audit demonstrations still hold", rc_aud.returncode == 0)
+    if not quick:
+        brst = seen.get("brst_cohomology.py", "")
+        check("brst_cohomology says its complex is a disk, not the AP complex",
+              "NOT the" in brst and "polygon" in brst)
+        check("and names the two readings of Delta_chi",
+              "EDGE COUNT" in brst)
+        gap = seen.get("gap_label_spectrum.py", "")
+        check("gap_label_spectrum uses a relative irrationality measure",
+              "relative distance" in gap)
+        check("and calls its label counts truncation artifacts",
+              "artifacts of where the sums were truncated" in gap)
+        retro = seen.get("retrocausal_capacity_verification.py", "")
+        check("retrocausal calls the singlet match an identity",
+              "an identity in r" in retro)
 
     print("\nthe corrected values, for the record")
     print("    lambda_A  = %.10f   (4 + sqrt 15)" % C.AREA)

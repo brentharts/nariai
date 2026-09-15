@@ -97,18 +97,31 @@ ap_density = len(ext) / 1.0       # labels per unit interval
 per_labels  = periodic_labels(20)
 print(f"\n  Aperiodic labels (|coeff|≤1, k≤4):  {len(ext)} in (0,1)")
 print(f"  Periodic labels (q≤20):             {len(per_labels)} in (0,1)")
+print("  Both counts are artifacts of where the sums were truncated, and")
+print("  neither is a property of the spectrum: ℤ[1/λ_A] = ℤ[√15] is DENSE")
+print("  in ℝ, so relaxing either cutoff grows its count without bound.")
+print("  The real contrast is structural -- ℤ[√15] against ℤ[1/q] -- and")
+print("  is not captured by comparing two finite tallies.")
 
 # Distinguishing feature: check irrationality of all primary labels
-print("\n  Irrationality check (no label should be expressible as p/q, q<100):")
-for k in range(1, 6):
+# Irrationality check, on a RELATIVE error.  The previous version compared
+# |g − p/q| against a fixed absolute tolerance, which is not scale free: as
+# λ⁻ᵏ shrinks the nearest rational with small q becomes 0/1 and the absolute
+# error becomes λ⁻ᵏ itself, so the test declared the label periodic for
+# k ≥ 14.  See argument_audit.py, finding 'gap-irrationality'.
+print("\n  Irrationality check (relative distance to the nearest p/q, q<1000):")
+for k in range(1, 8):
     g = LAM**(-k)
     best_q = min(range(1, 1000), key=lambda q: abs(g - round(g * q) / q))
     best_approx = round(g * best_q) / best_q
-    error = abs(g - best_approx)
-    print(f"  λ⁻{k} = {g:.10f}  best rational ≈ {round(g*best_q)}/{best_q} = {best_approx:.10f}  Δ = {error:.2e}")
+    rel = abs(g - best_approx) / g
+    print(f"  λ⁻{k} = {g:.10f}  best ≈ {round(g*best_q)}/{best_q}"
+          f"  Δ/g = {rel:.2e}")
 
-print(f"\n  All primary labels are irrational (Pisot property of λ).")
-print(f"  A periodic spectrum would have Δ < 10⁻¹² for some small q.")
+print(f"\n  All primary labels are irrational: λ⁻ᵏ = (4−√15)ᵏ = m + n√15 with")
+print(f"  n ≠ 0 for every k ≥ 1, so no power is rational.  The table above is")
+print(f"  an illustration of that fact, not a proof of it -- a finite search")
+print(f"  over q can never establish irrationality.")
 
 # ── Optional plot ─────────────────────────────────────────────
 if "--plot" in sys.argv:

@@ -107,14 +107,17 @@ print(f"  Singlet fraction ratio F_max / F_min = {ratio_singlet:.10f}")
 print(f"  Eisenstein ratio |gE|/c_E4            = {gE_ratio:.10f}")
 print()
 
-# The key identity: the ratio of singlet fractions encodes gE_ratio
-# through the boundary dimension h.
-# F_max/F_min = (1/h) = (1 + r) where r = |gE|/c_{E4} = 2.1
-# So  r = F_max/F_min - 1
+# This is an IDENTITY, not a verification.  h is DEFINED as 1/(1+r), so
+# F_max/F_min = 1/h = 1+r holds for every value of r -- at r = 7 and at
+# r = 1000 just as at r = 2.1.  The assertion below therefore cannot fail
+# and confirms nothing about singlet fractions or Eisenstein coefficients.
+# The interpretation may still be worth making; it is an interpretation.
+# See argument_audit.py, finding 'retro-circular'.
 r_from_singlets = ratio_singlet - 1.0
 print(f"  r = F_max/F_min - 1 = {r_from_singlets:.10f}")
 print(f"  r = |gE|/c_E4       = {gE_ratio:.10f}")
-print(f"  Match: {abs(r_from_singlets - gE_ratio) < 1e-12}")
+print(f"  Match: {abs(r_from_singlets - gE_ratio) < 1e-12}"
+      "   (an identity in r; see argument_audit.py)")
 assert abs(r_from_singlets - gE_ratio) < 1e-12, "Singlet ratio does not match gE ratio!"
 
 print(f"""

@@ -117,6 +117,65 @@ it has been verified against a deliberately reintroduced bug — restoring
 "Topological entropy h_top" next to the corrected number. The value moved in
 the first rebuild; the name did not.
 
+### The third round: auditing the arguments
+
+Correct constants in correct identities still leave the question of whether
+the reasoning downstream holds. Auditing the three remaining rebuilt scripts
+line by line turned up seven findings, recorded as runnable demonstrations
+in `argument_audit.py`. Four are fixed; **three are open, and two of those
+bear on the flagship prediction.**
+
+**Δχ has two incompatible definitions, and they disagree about whether there
+is a signal at all.** `nariai_constants` defines `DELTA_CHI = V_SPECTRE −
+V_HAT = 14 − 13 = 1`, an edge count, and `Pi_circ = Delta_chi / lambda_A`
+rests on it. `brst_cohomology.py` defines it cohomologically, as
+`b₁(Spectre) − b₁(Hat)`, and computes **0**. Under the first reading
+Π_circ = 12.70%; under the second it is exactly zero. Nothing in the
+repository argues for one over the other. *(open: `delta-chi-ambiguous`)*
+
+**The AP complex is a polygon.** `brst_cohomology.py` builds a single convex
+n-gon — a disk — whose Betti numbers are (1,0,0) for every n. Its own
+docstring concedes the point: "extra generators come from the substitution
+identifying edge-classes non-trivially", and the identification is not
+implemented. So the Δχ = 0 above was guaranteed before any tiling entered
+the question: any two prototiles give the same answer. The Anderson–Putnam
+complex glues prototiles along edge classes identified under the
+substitution, and building it is real work, not a patch.
+*(open: `brst-disk`)*
+
+**`retrocausal_capacity_verification.py` rests on objects the repository has
+withdrawn.** `corrected_constants.py` retracts `I_max`, `I_doe` and
+`C_retro` as physical bounds — "category error; informational quantities for
+a different problem" — and that script's premise is their operational
+meaning. Either the retraction is too broad or the premise is gone; the
+repository currently holds both positions. *(open:
+`retro-retracted-objects`)*
+
+Fixed in this round:
+
+* **An irrationality test that declared the spectrum periodic.**
+  `gap_label_spectrum.py` checked that no gap label sat within `1e-12` of a
+  `p/q` with `q < 100`, using *absolute* error. As λ⁻ᵏ shrinks the nearest
+  such rational becomes `0/1` and the error becomes λ⁻ᵏ itself, so the test
+  passes below any fixed tolerance — it first declares the labels periodic
+  at **k = 14**. Replaced by a relative criterion. The conclusion was right
+  — (4−√15)ᵏ = m + n√15 with n ≠ 0 — but the evidence for it was not, and a
+  finite search over `q` cannot establish irrationality in any case.
+* **A label count that measured its own truncation.** "26 aperiodic labels
+  versus 127 periodic" compared coefficients in {−1,0,1} with k ≤ 4 against
+  rationals with q ≤ 20. ℤ[√15] is dense in ℝ, so the aperiodic count grows
+  without bound as either cutoff relaxes. Now labelled as such.
+* **A circular verification.** `retrocausal_capacity_verification.py`
+  asserted `r = F_max/F_min − 1 = 2.1 = |gE|/c_E4`. But `h` is *defined* as
+  `1/(1+r)`, so `F_max/F_min = 1/h = 1+r` identically — the assertion holds
+  at r = 7 and r = 1000 as readily as at 2.1, and cannot fail. Relabelled as
+  the identity it is.
+* **Torsion asserted while nothing computed it.** `brst_cohomology.py`
+  reported `T = ℤ/2ℤ` for the Hat and `T = 0` for the Spectre as "the
+  homological signature of Δχ = 1", while `smith_normal_form_ranks` returns
+  a torsion count of 0 unconditionally and says so in its own comment. Now
+  labelled an expectation, not a result.
+
 ### What changed, concretely
 
 The flagship observational prediction is affected. `sgwb_polarization.py`
@@ -180,7 +239,8 @@ no source arrive at the same `4 + sqrt(15)`.
 | file | purpose |
 |---|---|
 | `nariai_constants.py` | **Start here.** The single importable source of truth. Silent, derives everything from the substitution matrix, `--selftest`. |
-| `consistency_test.py` | Checks the repository against itself: source, imports, output, and the identities between constants. Run it before pushing. |
+| `consistency_test.py` | Checks the repository against itself: source, imports, output, identities between constants, and that the audited claims have not regressed. Run it before pushing. |
+| `argument_audit.py` | The findings from auditing the *arguments*, each as a runnable demonstration. Three remain open. |
 | `corrected_constants.py` | The retraction report: what was wrong, what replaced it, and why. |
 | `spectre.py` | The Smith–Myers–Kaplan–Goodman-Strauss metatile substitution; the geometry everything else rests on. |
 | `brst_cohomology.py` | Anderson–Putnam chain complex for the Spectre; BRST/boundary cohomology `H*(Omega)`. |
@@ -264,11 +324,8 @@ so their status beyond "imports resolve" is unverified.
 
 ## Known problems, in the order worth fixing
 
-1. **Re-examine the remaining rebuilt scripts' conclusions.** The
-   dimensional-flow and SLE files have now been re-read (see below);
-   `brst_cohomology.py`, `gap_label_spectrum.py` and
-   `retrocausal_capacity_verification.py` have had their constants corrected
-   but their downstream arguments have not been audited the same way.
+1. **Resolve the three open findings in `argument_audit.py`** — see below.
+   Two of them bear directly on whether the repository predicts a signal.
 2. **Give the `ligo*` series an index.** Thirty-six files with no record of
    which supersede which is not recoverable by a reader, and barely by the
    author.

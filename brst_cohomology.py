@@ -129,9 +129,18 @@ print()
 print("  Chirality cost  Δχ = b₁(Spectre) − b₁(Hat) =",
       results[14][1] - results[13][1])
 print()
-print("  Note: b₁ increases by Δ=1 when going from Hat to Spectre")
-print("  because the strictly chiral Spectre has one additional")
-print("  independent topological cycle (no mirror identification).")
+print("  WHAT THIS DOES AND DOES NOT SHOW  (see argument_audit.py):")
+print("    The complex built here is a single convex polygon, i.e. a disk,")
+print("    so its Betti numbers are (1,0,0) for EVERY n and the difference")
+print("    above is 0 for any pair of prototiles whatever.  This is NOT the")
+print("    Anderson-Putnam complex: that one glues prototiles along edge")
+print("    classes identified under the substitution, and without those")
+print("    identifications none of the tiling's topology is present.")
+print()
+print("    The Δχ = 1 used elsewhere in this repository is an EDGE COUNT,")
+print("    14 − 13, not this Betti difference.  The two readings give")
+print("    Π_circ = 12.70% and Π_circ = 0 respectively, and nothing here")
+print("    adjudicates between them.")
 
 # ── Physical Hilbert space ─────────────────────────────────────
 section("Physical Hilbert Space  ℋ_phys = H*(Ω)")
@@ -140,7 +149,8 @@ print("""
   On the aperiodic Spectre background, the BRST operator Q is
   identified with the cellular boundary operator ∂:
 
-      Q ≡ ∂ : Cᵏ(Γ) → Cᵏ⁺¹(Γ)
+      Q ≡ δ : Cᵏ(Γ) → Cᵏ⁺¹(Γ)      (the COBOUNDARY; the boundary
+                                    ∂ lowers degree, ∂: C_k → C_{k−1})
 
   The physical state space is:
 
@@ -152,11 +162,17 @@ print("""
     3.  H¹(Ω) = ℤ^b₁ ⊕ T  (with possible torsion T from substitution)
     4.  H²(Ω) = ℤ          (orientable)
 
-  The torsion subgroup T in H¹ encodes the binary chirality:
-    - Hat:    T = ℤ/2ℤ  (mirror copy ↔ non-trivial 2-torsion class)
-    - Spectre: T = 0    (no mirror copies → no 2-torsion)
+  The torsion subgroup T in H¹ is EXPECTED to encode the binary
+  chirality, on the reasoning that a mirror identification produces a
+  2-torsion class:
+    - Hat:     T = ℤ/2ℤ   (expected)
+    - Spectre: T = 0      (expected)
 
-  This torsion difference is the homological signature of Δχ = 1.
+  NOT COMPUTED HERE.  smith_normal_form_ranks returns a torsion count
+  of 0 unconditionally — see its own comment, 'torsion requires exact
+  SNF (skipped here)' — so this script provides no evidence either way.
+  Exact Smith normal form over ℤ would be needed, on the real AP
+  complex rather than on a polygon.
 """)
 
 # ── Boundary operator matrices (explicit, n=14) ───────────────
